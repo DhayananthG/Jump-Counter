@@ -1,3 +1,4 @@
+# Importing the Essential Libraries
 import mediapipe as mp
 import cv2
 import numpy as np
@@ -5,21 +6,26 @@ import numpy as np
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
-# Initialize MediaPipe Pose
+# Initializing MediaPipe Pose
 pose = mp_pose.Pose(min_detection_confidence=0.6, min_tracking_confidence=0.6)
 
+# Initializing The Default Web Camera
 cap = cv2.VideoCapture(0)
 
+# Creating Two Drawing Specifications
 drawspec1 = mp_drawing.DrawingSpec(thickness=4,circle_radius=5,color=(0,0,255))
 drawspec2 = mp_drawing.DrawingSpec(thickness=4,circle_radius=8,color=(0,255,0))
 
+# Checking the camera is opened or not
 if not cap.isOpened():
     print("Error: Camera not found or cannot be opened.")
     exit()
 
+# Initializing Some Variables
 jump_count = 0
 leg_in_air = False
-threshold = 0.5
+right_var = 540
+left_var = 540
 
 while True:
     ret, frame = cap.read()
@@ -47,16 +53,17 @@ while True:
         right_ankle_y = int(right_ankle_landmark.y * frame.shape[0])
         right_ankle_z = right_ankle_landmark.z
 
+        cv2.putText(frame, f"Right Y:{right_ankle_y}",(50,60),cv2.FONT_HERSHEY_SIMPLEX,2,(0,0,0),2,cv2.LINE_AA)
+        cv2.putText(frame, f"Left Y:{left_ankle_y}",(50,150),cv2.FONT_HERSHEY_SIMPLEX,2,(0,0,0),2,cv2.LINE_AA)
+
         # Draw circles at the detected ankle positions
         cv2.circle(frame, (left_ankle_x, left_ankle_y), 8, (0, 0, 255), -1)
         cv2.circle(frame, (right_ankle_x, right_ankle_y), 8, (0, 0, 255), -1)
 
-        if left_ankle_y > threshold and right_ankle_y > threshold :
-            leg_in_air = True
-            if leg_in_air == True :
-                jump_count +=1
-            else:
-                pass
+        if left_ankle_y < left_var and right_ankle_y < right_var :
+             if not leg_in_air:
+                leg_in_air = True
+                jump_count = jump_count +1
         else:
             leg_in_air = False
 
